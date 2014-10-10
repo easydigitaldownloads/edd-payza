@@ -121,7 +121,6 @@ function edds_confirm_payza_payment() {
         }
     }
 }
-
 add_action( 'init', 'edds_confirm_payza_payment' );
 
 /**
