@@ -17,6 +17,10 @@ if ( !defined( 'EDD_PAYZA_PLUGIN_URL' ) ) {
     define( 'EDD_PAYZA_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 }
 
+if( class_exists( 'EDD_License' ) && is_admin()  {
+    $license = new EDD_License( __FILE__, 'Payza Payment Gateway', '1.0.3', 'Pippin Williamson' );
+}
+
 /**
  * Registers the payment gateway
  *
@@ -27,7 +31,6 @@ function edd_payza_register_gateway( $gateways ) {
     $gateways['payza'] = array( 'admin_label' => 'Payza', 'checkout_label' => __( 'Payza', 'eddap' ) );
     return $gateways;
 }
-
 add_filter( 'edd_payment_gateways', 'edd_payza_register_gateway' );
 
 /**
@@ -60,7 +63,7 @@ function edds_process_payza_payment( $purchase_data ) {
         'date' => $purchase_data['date'],
         'user_email' => $purchase_data['user_email'],
         'purchase_key' => $purchase_data['purchase_key'],
-        'currency' => $edd_options['currency'],
+        'currency' => edd_get_currency(),
         'downloads' => $purchase_data['downloads'],
         'cart_details' => $purchase_data['cart_details'],
         'user_info' => $purchase_data['user_info'],
@@ -75,7 +78,7 @@ function edds_process_payza_payment( $purchase_data ) {
 
         // Request details
         $merchant_id = $edd_options['payza_merchant_id'];
-        $currency = $edd_options['currency'];
+        $currency = edd_get_currency();
         $return_url = get_permalink( $edd_options['success_page'] ) . '?payment-confirmation=payza';
         $cancel_url = get_permalink( $edd_options['purchase_page'] );
         $ipn_url = trailingslashit( home_url() ) . '?edd-listener=PAYZA_IPN';
@@ -92,10 +95,10 @@ function edds_process_payza_payment( $purchase_data ) {
             wp_redirect( $redirect_url );
             exit;
         } else {
-            edd_send_back_to_checkout( '?payment-mode=' . $purchase_data['post_data']['edd-gateway'] );
+            edd_send_back_to_checkout( '?payment-mode=payza' );
         }
     } else {
-        edd_send_back_to_checkout( '?payment-mode=' . $purchase_data['post_data']['edd-gateway'] );
+        edd_send_back_to_checkout( '?payment-mode=payza' );
     }
 }
 
@@ -110,7 +113,7 @@ function edds_confirm_payza_payment() {
     if ( isset( $_GET['edd-listener'] ) && $_GET['edd-listener'] === 'PAYZA_IPN' ) {
         if ( isset( $_POST['token'] ) ) {
             require_once EDD_PAYZA_PLUGIN_DIR . '/payza.gateway.php';
-            $ipn_handler = new wp_payza_ipn( $edd_options['currency'], true );
+            $ipn_handler = new wp_payza_ipn( edd_get_currency(), true );
             $transaction_id = $ipn_handler->handle_ipn( $_POST['token'] );
             if ( $transaction_id ) {
                 edd_update_payment_status( $transaction_id, 'publish' );
