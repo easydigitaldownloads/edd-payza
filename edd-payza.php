@@ -17,7 +17,7 @@ if ( !defined( 'EDD_PAYZA_PLUGIN_URL' ) ) {
     define( 'EDD_PAYZA_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 }
 
-if( class_exists( 'EDD_License' ) && is_admin()  {
+if( class_exists( 'EDD_License' ) && is_admin() ) {
     $license = new EDD_License( __FILE__, 'Payza Payment Gateway', '1.0.3', 'Pippin Williamson' );
 }
 
