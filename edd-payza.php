@@ -77,7 +77,7 @@ function edds_process_payza_payment( $purchase_data ) {
         require_once 'payza.gateway.php';
 
         // Request details
-        $merchant_id = $edd_options['payza_merchant_id'];
+        $merchant_id = trim( $edd_options['payza_merchant_id'] );
         $currency = edd_get_currency();
         $return_url = get_permalink( $edd_options['success_page'] ) . '?payment-confirmation=payza';
         $cancel_url = get_permalink( $edd_options['purchase_page'] );
