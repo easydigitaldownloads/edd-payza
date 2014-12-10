@@ -168,9 +168,16 @@ class wp_payza_gateway
         $start = 1;
         $length = count($cart_details);
         for ($i = 0; $i < $length; $i++) {
+
+            $item_amount = round( ( $cart_details[$i]['subtotal'] / $cart_details[$i]['quantity'] ) - ( $cart_details[$i]['discount'] / $cart_details[$i]['quantity'] ), 2 );
+
+            if( $item_amount <= 0 ) {
+                $item_amount = 0;
+            }
+            
             $formatted_cart['ap_itemname_' . $start] = $cart_details[$i]['name'];
             $formatted_cart['ap_quantity_' . $start] = $cart_details[$i]['quantity'];
-            $formatted_cart['ap_amount_' . $start] = $cart_details[$i]['price'];
+            $formatted_cart['ap_amount_' . $start] = $item_amount;
             $start++;
         }
         return $formatted_cart;
