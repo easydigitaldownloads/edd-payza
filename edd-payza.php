@@ -3,7 +3,7 @@
 Plugin Name: Easy Digital Downloads - Payza Payment Gateway
 Plugin URL: http://easydigitaldownloads.com/extension/payza
 Description: Adds a payment gateway for payza.com.com / Payza to Easy Digital Downloads
-Version: 1.0.3
+Version: 1.0.4
 Author: Abid Omar and Pippin Williamson
 Contributors: abidomar, mordauk
 Author URI: http://omarabid.com
@@ -18,7 +18,7 @@ if ( !defined( 'EDD_PAYZA_PLUGIN_URL' ) ) {
 }
 
 if( class_exists( 'EDD_License' ) && is_admin() ) {
-    $license = new EDD_License( __FILE__, 'Payza Payment Gateway', '1.0.3', 'Pippin Williamson' );
+    $license = new EDD_License( __FILE__, 'Payza Payment Gateway', '1.0.4', 'Pippin Williamson' );
 }
 
 /**
