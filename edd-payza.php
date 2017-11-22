@@ -81,7 +81,7 @@ function edds_process_payza_payment( $purchase_data ) {
 		$currency    = edd_get_currency();
 		$return_url  = edd_get_success_page_uri( '?payment-confirmation=payza' );
 		$cancel_url  = edd_get_failed_transaction_uri();
-		$ipn_url     = 'http://de4940c3.ngrok.io?edd-listener=PAYZA_IPN';
+		$ipn_url     = home_url( 'index.php' ) . '?edd-listener=PAYZA_IPN';
 
 
 		// Create a new instance of the mb class
