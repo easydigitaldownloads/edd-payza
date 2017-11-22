@@ -109,18 +109,18 @@ add_action( 'edd_gateway_payza', 'edds_process_payza_payment' );
  *
  */
 function edds_confirm_payza_payment() {
-	if ( isset( $_REQUEST['edd-listener'] ) && $_REQUEST['edd-listener'] === 'PAYZA_IPN' ) {
-		edd_debug_log( 'Payza IPN Notification:' . print_r( $_REQUEST, true ) );
+	if ( isset( $_GET['edd-listener'] ) && $_GET['edd-listener'] === 'PAYZA_IPN' ) {
+		edd_debug_log( 'Payza IPN Notification:' . print_r( $_POST, true ) );
 
-		if ( isset( $_REQUEST['token'] ) ) {
+		if ( isset( $_POST['token'] ) ) {
 			require_once EDD_PAYZA_PLUGIN_DIR . '/payza.gateway.php';
 			$ipn_handler    = new wp_payza_ipn( edd_get_currency(), true );
-			$transaction_id = $ipn_handler->handle_ipn( $_REQUEST['token'] );
+			$transaction_id = $ipn_handler->handle_ipn( $_POST['token'] );
 			if ( $transaction_id ) {
 				edd_update_payment_status( $transaction_id, 'publish' );
 			}
-		} elseif ( isset( $_REQUEST['apc_1'] ) ) {
-			$payment_id = intval( $_REQUEST['apc_1'] );
+		} elseif ( isset( $_POST['apc_1'] ) ) {
+			$payment_id = intval( $_POST['apc_1'] );
 			$payment = edd_get_payment( $payment_id );
 
 			if ( false === $payment ) {
@@ -128,11 +128,11 @@ function edds_confirm_payza_payment() {
 				die();
 			}
 
-			$transaction_type = strtolower( sanitize_text_field( $_REQUEST['ap_transactionstate'] ) );
+			$transaction_type = strtolower( sanitize_text_field( $_POST['ap_transactionstate'] ) );
 			if ( 'completed' === $transaction_type && $payment->status !== 'publish' ) {
 
 				$payment_total = floatval( $payment->total );
-				$ipn_total     = floatval( $_REQUEST['ap_amount'] );
+				$ipn_total     = floatval( $_POST['ap_totalamount'] );
 
 				if ( $payment_total < $ipn_total ) {
 
@@ -143,7 +143,7 @@ function edds_confirm_payza_payment() {
 
 				} else {
 
-					$payment->transaction_id = sanitize_text_field( $_REQUEST['ap_referencenumber'] );
+					$payment->transaction_id = sanitize_text_field( $_POST['ap_referencenumber'] );
 					$payment->status         = 'publish';
 					$payment->save();
 
