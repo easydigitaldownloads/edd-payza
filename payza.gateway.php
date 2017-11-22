@@ -146,7 +146,10 @@ class wp_payza_gateway
 
 		// Cart Details
 		if ($cart_details) {
+			$payment      = edd_get_payment( $transaction_id );
 			$cart_details = $this->get_cart_details($cart_details);
+
+			$cart_details['ap_taxamount'] = $payment->tax;
 			$args = array_merge($cart_details, $args);
 		} else {
 			$this->debug_info = 'Cart Details empty';
@@ -170,20 +173,18 @@ class wp_payza_gateway
 	private function get_cart_details($cart_details)
 	{
 		$formatted_cart = array();
-		$start = 1;
-		$length = count($cart_details);
-		for ($i = 0; $i < $length; $i++) {
-
-			$item_amount = round( ( $cart_details[$i]['subtotal'] / $cart_details[$i]['quantity'] ) - ( $cart_details[$i]['discount'] / $cart_details[$i]['quantity'] ), 2 );
+		$key = 1;
+		foreach( $cart_details as $i => $item ) {
+			$item_amount = $item['item_price'] - ( $item['discount'] / $item['quantity'] );
 
 			if( $item_amount <= 0 ) {
 				$item_amount = 0;
 			}
 
-			$formatted_cart['ap_itemname_' . $start] = $cart_details[$i]['name'];
-			$formatted_cart['ap_quantity_' . $start] = $cart_details[$i]['quantity'];
-			$formatted_cart['ap_amount_' . $start] = $item_amount;
-			$start++;
+			$formatted_cart['ap_itemname_' . $key]  = $item['name'];
+			$formatted_cart['ap_quantity_' . $key]  = $item['quantity'];
+			$formatted_cart['ap_amount_' . $key]    = $item_amount;
+			$key++;
 		}
 		return $formatted_cart;
 	}

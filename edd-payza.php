@@ -83,7 +83,6 @@ function edds_process_payza_payment( $purchase_data ) {
 		$cancel_url  = edd_get_failed_transaction_uri();
 		$ipn_url     = home_url( 'index.php' ) . '?edd-listener=PAYZA_IPN';
 
-
 		// Create a new instance of the mb class
 		$payza = new wp_payza_gateway ( $merchant_id, 'item', $currency, $return_url, $cancel_url, $ipn_url, edd_is_test_mode() );
 
