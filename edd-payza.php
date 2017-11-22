@@ -163,6 +163,18 @@ function edds_confirm_payza_payment() {
 add_action( 'init', 'edds_confirm_payza_payment' );
 
 /**
+ * Register our settings section
+ *
+ * @return array
+ */
+function edd_payza_settings_section( $sections ) {
+	$sections['edd-payza'] = __( 'Payza', 'eddap' );
+
+	return $sections;
+}
+add_filter( 'edd_settings_sections_gateways', 'edd_payza_settings_section' );
+
+/**
  * Adds the Payza Settings form
  *
  * @param array   $settings
@@ -178,12 +190,17 @@ function edd_payza_add_settings( $settings ) {
 		),
 		array(
 			'id'   => 'payza_merchant_id',
-			'name' => __( 'Merchant ID', 'eddap' ),
+			'name' => __( 'Merchant Email Address', 'eddap' ),
 			'desc' => __( 'Enter your Payza merchant Email', 'eddap' ),
 			'type' => 'text',
 			'size' => 'regular',
 		)
 	);
+
+	if ( version_compare( EDD_VERSION, 2.5, '>=' ) ) {
+		$ap_settings = array( 'edd-payza' => $ap_settings );
+	}
+
 	return array_merge( $settings, $ap_settings );
 }
 
