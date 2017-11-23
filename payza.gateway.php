@@ -150,6 +150,19 @@ class wp_payza_gateway
 			$cart_details = $this->get_cart_details($cart_details);
 
 			$cart_details['ap_taxamount'] = $payment->tax;
+
+			$shipping_total = 0;
+			$fee_discounts  = 0;
+			foreach ( $payment->fees as $fee ) {
+				if ( floatval( $fee['amount'] ) < 0 ) {
+					$fee_discounts += $fee['amount'];
+				} else if ( false !== strpos( $fee['id'], 'simple_shipping' ) ) {
+					$shipping_total += floatval( $fee['amount'] );
+				}
+			}
+			$cart_details['ap_shippingcharges'] = floatval( $shipping_total );
+			$cart_details['ap_discountamount']  = ( $payment->subtotal - $payment->discounted_amount ) - $fee_discounts;
+
 			$args = array_merge($cart_details, $args);
 		} else {
 			$this->debug_info = 'Cart Details empty';
@@ -175,7 +188,7 @@ class wp_payza_gateway
 		$formatted_cart = array();
 		$key = 1;
 		foreach( $cart_details as $i => $item ) {
-			$item_amount = $item['item_price'] - ( $item['discount'] / $item['quantity'] );
+			$item_amount = $item['item_price'];
 
 			if( $item_amount <= 0 ) {
 				$item_amount = 0;
