@@ -160,8 +160,9 @@ class wp_payza_gateway
 					$shipping_total += floatval( $fee['amount'] );
 				}
 			}
-			$cart_details['ap_shippingcharges'] = floatval( $shipping_total );
-			$cart_details['ap_discountamount']  = ( $payment->subtotal - $payment->discounted_amount ) - $fee_discounts;
+			$cart_details['ap_shippingcharges'] = edd_format_amount( floatval( $shipping_total ) );
+			$cart_details['ap_discountamount']  = edd_format_amount( floatval( $payment->subtotal - $payment->discounted_amount ) - $fee_discounts );
+			$cart_details['ap_currency']        = $payment->currency;
 
 			$args = array_merge($cart_details, $args);
 		} else {
