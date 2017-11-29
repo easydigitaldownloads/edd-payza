@@ -189,7 +189,7 @@ class wp_payza_gateway
 		$formatted_cart = array();
 		$key = 1;
 		foreach( $cart_details as $i => $item ) {
-			$item_amount = $item['item_price'];
+			$item_amount = edd_prices_include_tax() ? $item['item_price'] - ( $item['tax'] / $item['quantity'] ) : $item['item_price'];
 
 			if( $item_amount <= 0 ) {
 				$item_amount = 0;
