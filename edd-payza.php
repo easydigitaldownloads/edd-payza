@@ -57,6 +57,8 @@ add_filter( 'edd_accepted_payment_icons', 'edd_payza_payment_icon' );
 function edds_process_payza_payment( $purchase_data ) {
 	global $edd_options;
 
+	edd_debug_log( 'EDD Payza - Process Payment Log #1. The edds_process_payza_payment function is running for ' . $purchase_data['user_email'] );
+
 	// record the pending payment
 	$payment_data = array(
 		'price' => $purchase_data['price'],
@@ -76,6 +78,8 @@ function edds_process_payza_payment( $purchase_data ) {
 	if ( $payment ) {
 		require_once 'payza.gateway.php';
 
+		edd_debug_log( 'EDD Payza - Process Payment Log #2. A pending payment record was generated for ' . $purchase_data['user_email'] );
+
 		// Request details
 		$merchant_id = trim( $edd_options[ 'payza_merchant_id' ] );
 		$currency    = edd_get_currency();
@@ -91,12 +95,15 @@ function edds_process_payza_payment( $purchase_data ) {
 
 		if ( $redirect_url ) {
 			// Redirects the user
+			edd_debug_log( 'EDD Payza - Process Payment Log #3. The customer (' . $purchase_data['user_email'] . ') was redirected to Payza to complete payment: ' . $redirect_url );
 			wp_redirect( $redirect_url );
 			exit;
 		} else {
+			edd_debug_log( 'EDD Payza - Process Payment Log #3. The customer (' . $purchase_data['user_email'] . ') was redirected back to the checkout page on this website.' );
 			edd_send_back_to_checkout( '?payment-mode=payza' );
 		}
 	} else {
+		edd_debug_log( 'EDD Payza - Process Payment Log #2. The customer (' . $purchase_data['user_email'] . ') was redirected back to the checkout page on this website.' );
 		edd_send_back_to_checkout( '?payment-mode=payza' );
 	}
 }
@@ -109,20 +116,26 @@ add_action( 'edd_gateway_payza', 'edds_process_payza_payment' );
  */
 function edds_confirm_payza_payment() {
 	if ( isset( $_GET['edd-listener'] ) && $_GET['edd-listener'] === 'PAYZA_IPN' ) {
-		edd_debug_log( 'Payza IPN Notification:' . print_r( $_POST, true ) );
+
+		edd_debug_log( 'EDD Payza - IPN Notification Log #1. The edds_confirm_payza_payment function is running. The POST data from Payza is: ' . print_r( $_POST, true ) );
 
 		if ( isset( $_POST['token'] ) ) {
 			require_once EDD_PAYZA_PLUGIN_DIR . '/payza.gateway.php';
 			$ipn_handler    = new wp_payza_ipn( edd_get_currency(), true );
 			$transaction_id = $ipn_handler->handle_ipn( $_POST['token'] );
+
 			if ( $transaction_id ) {
+				edd_debug_log( 'EDD Payza - IPN Notification Log #11. Setting status of payment ' . $transaction_id . ' to "publish"' );
 				edd_update_payment_status( $transaction_id, 'publish' );
+			} else{
+				edd_debug_log( 'EDD Payza - IPN Notification Log #11. The Transaction/Payment ID was not set.' );
 			}
 		} elseif ( isset( $_POST['apc_1'] ) ) {
 			$payment_id = intval( $_POST['apc_1'] );
 			$payment = edd_get_payment( $payment_id );
 
 			if ( false === $payment ) {
+				edd_debug_log( 'EDD Payza - IPN Notification Log #2. The payment ID returned from Payza did not match any payment in EDD. The payment ID value from Payza in the IPN is: ' . $_POST['apc_1'] . '.' );
 				echo 'Invalid Payment ID';
 				die();
 			}
@@ -134,13 +147,15 @@ function edds_confirm_payza_payment() {
 				$ipn_total     = floatval( $_POST['ap_totalamount'] );
 
 				if ( $payment_total < $ipn_total ) {
-
+					edd_debug_log( 'EDD Payza - IPN Notification Log #2. ' . sprintf( __( 'Payment failed: Payment Total was %d but IPN total was %d', 'edd-payza' ), $payment_total, $ipn_total )  );
 					// If the payment total doesn't match what the IPN is sending, mark it as failed.
 					$payment->add_note( sprintf( __( 'Payment failed: Payment Total was %d but IPN total was %d', 'edd-payza' ), $payment_total, $ipn_total ) );
 					$payment->status = 'failed';
 					$payment->save();
 
 				} else {
+
+					edd_debug_log( 'EDD Payza - IPN Notification Log #2. IPN successfully confirmed. Setting status of payment ' . $payment->ID . ' to "publish"' );
 
 					$payment->transaction_id = sanitize_text_field( $_POST['ap_referencenumber'] );
 					$payment->status         = 'publish';
@@ -149,6 +164,8 @@ function edds_confirm_payza_payment() {
 				}
 
 			} elseif ( 'refunded' === $transaction_type ) {
+
+				edd_debug_log( 'EDD Payza - IPN Notification Log #2. IPN successfully confirmed. Setting status of payment ' . $payment->ID . ' to "refunded"' );
 
 				$payment->status = 'refunded';
 				$payment->save();

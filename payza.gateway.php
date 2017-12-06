@@ -250,7 +250,7 @@ class wp_payza_ipn
 	 *
 	 * @var string
 	 */
-	private $sandbox_ipn_handler = 'https://sandbox.Payza.com/sandbox/IPN2.ashx';
+	private $sandbox_ipn_handler = 'https://secure.payza.com/ipn2.ashx';
 
 	/**
 	 * IPN Handler
@@ -289,31 +289,42 @@ class wp_payza_ipn
 	 */
 	public function handle_ipn($token)
 	{
+		edd_debug_log( 'EDD Payza - IPN Notification Log #2. The "handle_ipn" method is running in the wp_payza_ipn class' );
 		$response = $this->retrieve_response($token);
+		edd_debug_log( 'EDD Payza - IPN Notification Log #7. The $response variable is set to: ' . json_encode( $response ) );
+
 		if (strlen($response) > 0 && $response != 'INVALID TOKEN') {
 			// Extract Data
 			parse_str($response, $data);
-			$transaction_id = $data['apc_1']; // Transaction ID
+
+			edd_debug_log( 'EDD Payza - IPN Notification Log #8. The $data variable is a parsed string and is set to: ' . json_encode( $data ) );
+
+			$payment_id = $data['apc_1']; // Transaction ID
 			$currency = $data['ap_currency']; // Currency
 			$status = $data['ap_status']; // Status
 
-			// Retrieve transaction details
-			$payment_meta = get_post_meta($transaction_id, '_edd_payment_meta', true);
-			$amount = edd_format_amount($payment_meta['amount']); // amount
+			edd_debug_log( 'EDD Payza - IPN Notification Log #9. The payment meta saved to the EDD payment was: ' . $payment_meta );
+
+			$amount = edd_get_payment_amount( $payment_id );
 
 			if ($this->currency != $currency) {
+
+				edd_debug_log( 'EDD Payza - IPN Notification Log #10. IPN Failed because the currencies do not match. Payza Currency: ' . $currency . '. EDD Currency: ' . $this->currency . '.' );
 				return false;
 			}
 
 			if ($amount != $data['ap_totalamount']) {
+				edd_debug_log( 'EDD Payza - IPN Notification Log #10. IPN Failed because the payment amounts do not match. Payza Amount: ' . $data['ap_totalamount'] . '. EDD amount: ' . $amount . '.' );
 				return false;
 			}
 
 			if ($status != 'Success') {
+				edd_debug_log( 'EDD Payza - IPN Notification Log #10. IPN Failed because the Payza status is not "Success". Payza Status: ' . $status . '.');
 				return false;
 			}
 
-			return $transaction_id; // Payment Successful!
+			edd_debug_log( 'EDD Payza - IPN Notification Log #10. IPN check successful. Transaction ID (aka EDD Payment ID) : ' . $payment_id . '.');
+			return $payment_id; // Payment Successful!
 		}
 		return false;
 	}
@@ -327,6 +338,8 @@ class wp_payza_ipn
 	 */
 	private function retrieve_response($token)
 	{
+		edd_debug_log( 'EDD Payza - IPN Notification Log #3. The "retrieve_response" method is running in the wp_payza_ipn class' );
+
 		$body = array(
 			'token' => $token
 		);
@@ -335,21 +348,29 @@ class wp_payza_ipn
 			'timeout' => $this->timeout,
 			'sslverify' => $this->sslverify
 		);
+
+		edd_debug_log( 'EDD Payza - IPN Notification Log #4. Sending post data to Payza to confirm IPN. Url being pinged: ' . $this->ipn_handler . ' Data being sent: ' . json_encode( $request ) );
+
 		$response = wp_remote_post($this->ipn_handler, $request);
+
+		edd_debug_log( 'EDD Payza - IPN Notification Log #5. The IPN Handler response from Payza is: ' . json_encode( $response ) );
 
 		// HTTP Request fails
 		if (is_wp_error($response)) {
+			edd_debug_log( 'EDD Payza - IPN Notification Log #6. The IPN Handler response from Payza was erroneous.' );
 			$this->debug_info = $response;
 			return false;
 		}
 
 		// Status code returned other than 200
 		if ($response['response']['code'] != 200) {
+			edd_debug_log( 'EDD Payza - IPN Notification Log #6. The IPN Handler response from Payza was erroneous.' );
 			$this->debug_info = 'Response code different than 200';
 			return false;
 		}
 
 		// Request succeeded, return the Session ID
+		edd_debug_log( 'EDD Payza - IPN Notification Log #6. Returning response to the handle_ipn method in the wp_payza_ipn class.' );
 		return $response['body'];
 	}
 }
